@@ -1,16 +1,31 @@
 import Image from "next/image";
 import React, { useState } from "react";
 import reorderSymobol from "@/public/reorder.svg";
+import { questionTypes } from "@/Data/constants";
 
-const QuestionType = () => {
-  const [questionType, setQuestionType] = useState("shortAnswer");
+const QuestionType = ({ data }) => {
+  const [questionType, setQuestionType] = useState(data?.type);
   const [value, setValue] = useState("");
+  const [options, setOptions] = useState([]);
+  const [newOption, setNewOption] = useState("");
 
   const handleQuestionTypeChange = (e) => {
     setQuestionType(e.target.value);
     setValue("");
+    setOptions([]);
+    setNewOption("");
   };
 
+  const handleAddOption = () => {
+    if (newOption.trim() && !options.includes(newOption.trim())) {
+      setOptions((prev) => [...prev, newOption.trim()]);
+      setNewOption("");
+    }
+  };
+
+  const handleRemoveOption = (optionToRemove) => {
+    setOptions((prev) => prev.filter((option) => option !== optionToRemove));
+  };
   const renderInputField = () => {
     switch (questionType) {
       case "shortAnswer":
@@ -35,18 +50,48 @@ const QuestionType = () => {
         );
       case "singleSelect":
         return (
-          <select
-            className="border border-gray-300 p-2 rounded-lg w-full"
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-          >
-            <option value="" disabled>
-              Select an option
-            </option>
-            <option value="Option 1">Option 1</option>
-            <option value="Option 2">Option 2</option>
-            <option value="Option 3">Option 3</option>
-          </select>
+          <div>
+            <div className="flex items-center mb-2">
+              <input
+                type="text"
+                placeholder="Add an option"
+                className="border border-gray-300 p-2 rounded-lg flex-1"
+                value={newOption}
+                onChange={(e) => setNewOption(e.target.value)}
+              />
+              <button
+                type="button"
+                onClick={handleAddOption}
+                className="ml-2 px-2 py-1 text-4xl text-center rounded-lg"
+              >
+                +
+              </button>
+            </div>
+            <div>
+              {options.map((option) => (
+                <div
+                  key={option}
+                  className="flex justify-center items-center mb-2"
+                >
+                  <input
+                    type="checkbox"
+                    value={option}
+                    className="mr-2"
+                    checked={value === option}
+                    onChange={(e) => setValue(e.target.checked ? option : "")}
+                  />
+                  <label className="flex-1">{option}</label>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveOption(option)}
+                    className="ml-2 text-red-500"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
         );
       case "number":
         return (
@@ -88,11 +133,11 @@ const QuestionType = () => {
           value={questionType}
           onChange={handleQuestionTypeChange}
         >
-          <option value="shortAnswer">{"📃"}Short Answer</option>
-          <option value="longAnswer">{"📜"}Long Answer</option>
-          <option value="singleSelect">{"⏺️"}Single Select</option>
-          <option value="number">{"🔢"}Number</option>
-          <option value="url">{"🔗"}URL</option>
+          {questionTypes.map((data) => (
+            <option value={data.type} key={data.type}>
+              {data.text}
+            </option>
+          ))}
         </select>
         <Image src={reorderSymobol} alt="" width={16} />
       </div>
