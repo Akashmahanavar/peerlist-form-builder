@@ -4,6 +4,7 @@ import Navbar from "./Navbar";
 import Link from "next/link";
 import previewArrow from "@/public/preview-arrow.svg";
 import Image from "next/image";
+import QuestionType from "./QuestionType";
 
 const Form = () => {
   const [title, setTitle] = useState("Untitled Form");
@@ -37,7 +38,7 @@ const Form = () => {
           </Link>
         </div>
 
-        <div className="flex-grow overflow-y-auto bg-gray-100 p-4">
+        <div className="flex-grow overflow-y-auto p-4">
           <div className="flex justify-center">
             <Link
               href="/formlists"
@@ -46,6 +47,7 @@ const Form = () => {
               Add Question
             </Link>
           </div>
+          <QuestionType />
         </div>
 
         <div className="flex justify-between px-10 h-14 items-center border-t-[1px]">
