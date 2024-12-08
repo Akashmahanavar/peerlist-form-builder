@@ -119,7 +119,7 @@ const QuestionType = ({ data }) => {
   };
 
   return (
-    <div className="p-4 border border-gray-300 rounded shadow-sm w-full">
+    <div className="p-4 border border-gray-300 rounded shadow-sm w-full transition-all animate-fade-in">
       <div className="mb-1 flex items-center">
         <input
           type="text"
