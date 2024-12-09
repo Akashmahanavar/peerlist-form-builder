@@ -9,7 +9,10 @@ import QuestionType from "./QuestionType";
 import { formDataStructure, questionTypes } from "@/Data/constants";
 
 const Form = () => {
-  const [formData, setFormData] = useState(formDataStructure);
+  const [formData, setFormData] = useState(() => {
+    const savedDraft = localStorage.getItem("formDraft");
+    return savedDraft ? JSON.parse(savedDraft) : formDataStructure;
+  });
   const [currentStep, setCurrentStep] = useState("create");
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef(null);
@@ -100,6 +103,14 @@ const Form = () => {
       </div>
     );
   }
+  const saveAsDraft = () => {
+    if (formData.title && formData.questions.length > 0) {
+      localStorage.setItem("formDraft", JSON.stringify(formData));
+      alert("Form saved as draft!");
+    } else {
+      alert("Please add a form title and at least one question.");
+    }
+  };
 
   return (
     <div>
@@ -175,12 +186,12 @@ const Form = () => {
         </div>
 
         <div className="flex justify-between px-10 py-4 h-14 items-center border-t-[1px]">
-          <Link
-            href="/formlists"
+          <button
+            onClick={saveAsDraft}
             className="text-gray-500 border border-solid border-gray-500 px-4 py-1 rounded-xl hover:scale-105"
           >
             Save as Draft
-          </Link>
+          </button>
           <button
             className="bg-[#00AA45] text-white px-4 py-1 rounded-xl hover:scale-105"
             onClick={saveForm}
