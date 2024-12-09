@@ -12,16 +12,6 @@ export const formDataStructure = {
   },
 };
 
-export const questionData = {
-  id: 0,
-  questionText: "",
-  type: "",
-  options: [],
-  required: true,
-  answer: "",
-};
-export const formList = [];
-
 export const questionTypes = [
   {
     type: "shortAnswer",

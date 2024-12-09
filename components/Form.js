@@ -1,10 +1,8 @@
 "use client";
 import { ArrowUpRight, Plus } from "lucide-react";
-import Link from "next/link";
 import React, { useEffect, useRef, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import FormPreview from "./FormPreview";
-import FormSubmission from "./FormSubmission";
 import QuestionType from "./QuestionType";
 import { formDataStructure, questionTypes } from "@/Data/constants";
 
@@ -23,6 +21,7 @@ const Form = () => {
       question: "",
       description: "",
       options: type === "singleSelect" ? [""] : undefined,
+      answer: "",
     };
     setFormData((prevData) => ({
       ...prevData,
@@ -48,11 +47,22 @@ const Form = () => {
   };
 
   const saveForm = () => {
-    if (formData.title && formData.questions.length > 0) {
-      setCurrentStep("preview");
-    } else {
-      alert("Please add a form title and at least one question.");
+    if (!formData.title) {
+      alert("Please add a form title.");
+      return;
     }
+    if (formData.questions.length === 0) {
+      alert("Please add at least one question.");
+      return;
+    }
+    const hasEmptyQuestion = formData.questions.some(
+      (q) => !q.question || q.question.trim() === ""
+    );
+    if (hasEmptyQuestion) {
+      alert("All questions must have a valid question text.");
+      return;
+    }
+    setCurrentStep("preview");
   };
 
   useEffect(() => {
@@ -70,32 +80,21 @@ const Form = () => {
   if (currentStep === "preview") {
     return (
       <FormPreview
-        questions={formData.questions}
-        formTitle={formData.title}
-        onSubmit={() => setCurrentStep("submit")}
-      />
-    );
-  }
-
-  if (currentStep === "submit") {
-    return (
-      <FormSubmission
-        questions={formData?.questions}
-        formTitle={formData.title}
-        onSuccess={() => setCurrentStep("success")}
+        formData={formData}
+        onSubmit={() => setCurrentStep("success")}
       />
     );
   }
 
   if (currentStep === "success") {
     return (
-      <div className="text-center bg-white p-8 rounded-lg shadow">
+      <div className="text-center bg-white p-8 rounded-lg shadow mt-16">
         <h2 className="text-2xl font-bold mb-4 text-green-600">
           Form Submitted Successfully!
         </h2>
         <p className="mb-4 text-gray-600">Thank you for your response.</p>
         <button
-          className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 transition duration-200"
+          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition duration-200"
           onClick={() => setCurrentStep("create")}
         >
           Create New Form
