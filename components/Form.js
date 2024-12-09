@@ -6,15 +6,13 @@ import { v4 as uuidv4 } from "uuid";
 import FormPreview from "./FormPreview";
 import FormSubmission from "./FormSubmission";
 import QuestionType from "./QuestionType";
-import { questionTypes } from "@/Data/constants";
+import { formDataStructure, questionTypes } from "@/Data/constants";
 
 const Form = () => {
-  const [questions, setQuestions] = useState([]);
+  const [formData, setFormData] = useState(formDataStructure);
   const [currentStep, setCurrentStep] = useState("create");
-  const [formTitle, setFormTitle] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef(null);
-
   const addQuestion = (type) => {
     const newQuestion = {
       id: uuidv4(),
@@ -23,38 +21,35 @@ const Form = () => {
       description: "",
       options: type === "singleSelect" ? [""] : undefined,
     };
-    setQuestions([...questions, newQuestion]);
+    setFormData((prevData) => ({
+      ...prevData,
+      questions: [...prevData.questions, newQuestion],
+    }));
     setShowDropdown(false);
   };
 
   const updateQuestion = (id, updatedData) => {
-    setQuestions((prevQuestions) =>
-      prevQuestions.map((q) => (q.id === id ? { ...q, ...updatedData } : q))
-    );
+    setFormData((prevData) => ({
+      ...prevData,
+      questions: prevData.questions.map((q) =>
+        q.id === id ? { ...q, ...updatedData } : q
+      ),
+    }));
   };
 
   const removeQuestion = (id) => {
-    setQuestions(questions.filter((q) => q.id !== id));
+    setFormData((prevData) => ({
+      ...prevData,
+      questions: prevData.questions.filter((q) => q.id !== id),
+    }));
   };
 
   const saveForm = () => {
-    if (formTitle && questions.length > 0) {
+    if (formData.title && formData.questions.length > 0) {
       setCurrentStep("preview");
     } else {
       alert("Please add a form title and at least one question.");
     }
-  };
-
-  const onDragEnd = (result) => {
-    if (!result.destination) {
-      return;
-    }
-
-    const items = Array.from(questions);
-    const [reorderedItem] = items.splice(result.source.index, 1);
-    items.splice(result.destination.index, 0, reorderedItem);
-
-    setQuestions(items);
   };
 
   useEffect(() => {
@@ -72,8 +67,8 @@ const Form = () => {
   if (currentStep === "preview") {
     return (
       <FormPreview
-        questions={questions}
-        formTitle={formTitle}
+        questions={formData.questions}
+        formTitle={formData.title}
         onSubmit={() => setCurrentStep("submit")}
       />
     );
@@ -82,8 +77,8 @@ const Form = () => {
   if (currentStep === "submit") {
     return (
       <FormSubmission
-        questions={questions}
-        formTitle={formTitle}
+        questions={formData?.questions}
+        formTitle={formData.title}
         onSuccess={() => setCurrentStep("success")}
       />
     );
@@ -118,8 +113,13 @@ const Form = () => {
           <input
             type="text"
             placeholder="Untitled Form"
-            onChange={(e) => setFormTitle(e.target.value)}
-            value={formTitle}
+            onChange={(e) =>
+              setFormData((prevData) => ({
+                ...prevData,
+                title: e.target.value,
+              }))
+            }
+            value={formData.title}
             required
             className="text-gray-500 font-bold outline-none w-full"
           />
@@ -166,12 +166,10 @@ const Form = () => {
 
         <div className="flex-grow overflow-y-auto p-4 space-y-4">
           <div className="flex flex-col space-y-4">
-            {questions.map((data) => (
-              <QuestionType
-                key={data.id}
-                question={data}
-                updateQuestion={updateQuestion}
-              />
+            {formData?.questions?.map((data) => (
+              <React.Fragment key={data.id}>
+                <QuestionType question={data} updateQuestion={updateQuestion} />
+              </React.Fragment>
             ))}
           </div>
         </div>

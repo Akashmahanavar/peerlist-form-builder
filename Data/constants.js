@@ -1,9 +1,9 @@
 import { AlignLeft, CircleDot, Hash, Link2, Minus } from "lucide-react";
 
-export const formData = {
-  id: "uniqueFormId", // Unique identifier for the form
-  title: "", // Title of the form
-  description: "", // Optional description
+export const formDataStructure = {
+  id: "",
+  title: "",
+  description: "",
   questions: [],
   status: {
     isComplete: false,
