@@ -1,36 +1,60 @@
 "use client";
-import React, { useEffect, useRef, useState } from "react";
-import Navbar from "./Navbar";
+import { ArrowUpRight, Plus } from "lucide-react";
 import Link from "next/link";
-import previewArrow from "@/public/preview-arrow.svg";
-import Image from "next/image";
+import React, { useEffect, useRef, useState } from "react";
+import { v4 as uuidv4 } from "uuid";
+import FormPreview from "./FormPreview";
+import FormSubmission from "./FormSubmission";
 import QuestionType from "./QuestionType";
-import { formData, questionTypes } from "@/Data/constants";
+import { questionTypes } from "@/Data/constants";
 
 const Form = () => {
-  const [data, setData] = useState(formData);
+  const [questions, setQuestions] = useState([]);
+  const [currentStep, setCurrentStep] = useState("create");
+  const [formTitle, setFormTitle] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef(null);
-  const handleTitleChange = (e) => {
-    const newTitle = e.target.value;
-    setData((prevData) => ({
-      ...prevData,
-      title: newTitle,
-    }));
-  };
-  const handleAddQuestion = (type) => {
+
+  const addQuestion = (type) => {
     const newQuestion = {
-      id: data.questions.length + 1,
-      questionText: "",
-      type: type || "shortAnswer",
-      options: [],
-      required: false,
-      answer: "",
+      id: uuidv4(),
+      type,
+      question: "",
+      description: "",
+      options: type === "singleSelect" ? [""] : undefined,
     };
-    setData((prevData) => ({
-      ...prevData,
-      questions: [...prevData.questions, newQuestion], // Append the new question
-    }));
+    setQuestions([...questions, newQuestion]);
+    setShowDropdown(false);
+  };
+
+  const updateQuestion = (id, updatedData) => {
+    setQuestions((prevQuestions) =>
+      prevQuestions.map((q) => (q.id === id ? { ...q, ...updatedData } : q))
+    );
+  };
+
+  const removeQuestion = (id) => {
+    setQuestions(questions.filter((q) => q.id !== id));
+  };
+
+  const saveForm = () => {
+    if (formTitle && questions.length > 0) {
+      setCurrentStep("preview");
+    } else {
+      alert("Please add a form title and at least one question.");
+    }
+  };
+
+  const onDragEnd = (result) => {
+    if (!result.destination) {
+      return;
+    }
+
+    const items = Array.from(questions);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+
+    setQuestions(items);
   };
 
   useEffect(() => {
@@ -44,81 +68,127 @@ const Form = () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  if (currentStep === "preview") {
+    return (
+      <FormPreview
+        questions={questions}
+        formTitle={formTitle}
+        onSubmit={() => setCurrentStep("submit")}
+      />
+    );
+  }
+
+  if (currentStep === "submit") {
+    return (
+      <FormSubmission
+        questions={questions}
+        formTitle={formTitle}
+        onSuccess={() => setCurrentStep("success")}
+      />
+    );
+  }
+
+  if (currentStep === "success") {
+    return (
+      <div className="text-center bg-white p-8 rounded-lg shadow">
+        <h2 className="text-2xl font-bold mb-4 text-green-600">
+          Form Submitted Successfully!
+        </h2>
+        <p className="mb-4 text-gray-600">Thank you for your response.</p>
+        <button
+          className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 transition duration-200"
+          onClick={() => setCurrentStep("create")}
+        >
+          Create New Form
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div>
-      <Navbar />
       <div
         style={{
           height: "calc(100vh - 56px)",
         }}
         className="flex flex-col border border-solid w-full max-w-3xl mx-auto mt-14"
       >
-        <div className="flex justify-between items-center px-10 h-14 border-b-[1px]">
+        <div className="flex justify-between items-center px-10 py-4 h-14 border-b-[1px]">
           <input
             type="text"
             placeholder="Untitled Form"
-            onChange={handleTitleChange}
-            value={data.title}
+            onChange={(e) => setFormTitle(e.target.value)}
+            value={formTitle}
             required
             className="text-gray-500 font-bold outline-none w-full"
           />
-          <Link
-            href="/formlists"
-            className="text-gray-500 border border-solid border-gray-500 px-4 py-1 rounded-xl hover:scale-105"
+          <button
+            onClick={() => setCurrentStep("preview")}
+            className="text-gray-500 border border-gray-300 px-4 py-1 text-sm font-medium rounded-xl flex items-end gap-1"
           >
-            <div className="flex items-center">
-              <span>Preview</span>
-              <Image alt="" src={previewArrow} />
-            </div>
-          </Link>
+            <span>Preview</span>
+            <ArrowUpRight width={16} height={16} />
+          </button>
         </div>
 
-        <div className="flex-grow overflow-y-auto p-4">
-          <div className="flex justify-center">
-            <div className="relative inline-block" ref={dropdownRef}>
-              <button
-                className="border-2 border-gray-300 px-3 py-1 rounded-xl"
-                onClick={() => setShowDropdown((prev) => !prev)}
-              >
-                + Add Question
-              </button>
-              {showDropdown && (
-                <ul className="absolute mt-2 bg-white border border-gray-300 rounded shadow-md z-10">
-                  {questionTypes.map((data) => (
-                    <li
-                      key={data.type}
-                      className="px-[10px] py-2 cursor-pointer hover:bg-gray-200"
-                      onClick={() => handleAddQuestion(data.type)}
-                    >
-                      {data.text}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
+        <div className="flex justify-center mt-4">
+          <div className="relative inline-block" ref={dropdownRef}>
+            <button
+              className="text-gray-500 border border-gray-300 px-4 py-1 text-sm font-medium rounded-xl flex items-center gap-1"
+              onClick={() => setShowDropdown((prev) => !prev)}
+            >
+              <Plus width={16} height={16} />
+              <span>Add Question</span>
+            </button>
+            {showDropdown && (
+              <ul className="absolute left-1/2 -translate-x-1/2 mt-2 p-2 min-w-48 bg-white border border-gray-300 rounded-xl text-sm shadow-md z-10 overflow-hidden space-y-1">
+                <li
+                  key={-1}
+                  className="px-4 py-2 cursor-default text-gray-500 uppercase font-semibold bg-gray-200 rounded-lg"
+                >
+                  Input Types
+                </li>
+                {questionTypes.map((data) => (
+                  <li
+                    key={data.type}
+                    className="px-4 py-2 cursor-pointer hover:bg-gray-100 flex items-center rounded-lg gap-2"
+                    onClick={() => addQuestion(data.type)}
+                  >
+                    {data.icon}
+                    <span>{data.text}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
-          <div className="my-2 flex flex-col gap-2">
-            {data?.questions?.map((data) => (
-              <React.Fragment key={data.id}>
-                <QuestionType data={data} />
-              </React.Fragment>
+        </div>
+
+        <div className="flex-grow overflow-y-auto p-4 space-y-4">
+          <div className="flex flex-col space-y-4">
+            {questions.map((data) => (
+              <QuestionType
+                key={data.id}
+                question={data}
+                updateQuestion={updateQuestion}
+              />
             ))}
           </div>
         </div>
 
-        <div className="flex justify-between px-10 h-14 items-center border-t-[1px]">
+        <div className="flex justify-between px-10 py-4 h-14 items-center border-t-[1px]">
           <Link
             href="/formlists"
             className="text-gray-500 border border-solid border-gray-500 px-4 py-1 rounded-xl hover:scale-105"
           >
             Save as Draft
           </Link>
-          <Link
-            href="/formlists"
+          <button
             className="bg-[#00AA45] text-white px-4 py-1 rounded-xl hover:scale-105"
+            onClick={saveForm}
           >
             Publish Form
-          </Link>
+          </button>
         </div>
       </div>
     </div>
