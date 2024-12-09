@@ -1,5 +1,5 @@
 "use client";
-import { ArrowUpRight, Plus } from "lucide-react";
+import { ArrowUpRight, Plus, Trash } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import FormPreview from "./FormPreview";
@@ -7,13 +7,18 @@ import QuestionType from "./QuestionType";
 import { formDataStructure, questionTypes } from "@/Data/constants";
 
 const Form = () => {
-  const [formData, setFormData] = useState(() => {
-    const savedDraft = localStorage.getItem("formDraft");
-    return savedDraft ? JSON.parse(savedDraft) : formDataStructure;
-  });
+  const [formData, setFormData] = useState(formDataStructure);
   const [currentStep, setCurrentStep] = useState("create");
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const savedDraft = localStorage.getItem("formDraft");
+    if (savedDraft) {
+      setFormData(JSON.parse(savedDraft));
+    }
+  }, []);
+
   const addQuestion = (type) => {
     const newQuestion = {
       id: uuidv4(),
@@ -177,9 +182,20 @@ const Form = () => {
         <div className="flex-grow overflow-y-auto p-4 space-y-4">
           <div className="flex flex-col space-y-4">
             {formData?.questions?.map((data) => (
-              <React.Fragment key={data.id}>
-                <QuestionType question={data} updateQuestion={updateQuestion} />
-              </React.Fragment>
+              <div key={data.id} className="flex gap-4 items-center">
+                <div className="flex-grow">
+                  <QuestionType
+                    question={data}
+                    updateQuestion={updateQuestion}
+                  />
+                </div>
+                <button
+                  onClick={() => removeQuestion(data.id)}
+                  className="text-red-500 p-2 hover:text-red-700 transition duration-200"
+                >
+                  <Trash width={20} height={20} />
+                </button>
+              </div>
             ))}
           </div>
         </div>
